@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 public class TransaccionRequest {
     
     @NotNull(message = "El campo Transaccion es obligatorio")
+    @jakarta.validation.Valid
     private Transaccion Transaccion;
     
     @Data
