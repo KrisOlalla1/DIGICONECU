@@ -24,11 +24,7 @@ public class TransaccionController {
     private final IGestorEstadosService gestorEstadosService;
     private final TransaccionRepository transaccionRepository;
 
-    /**
-     * =========================
-     *  TAREA 1.1
-     * =========================
-     */
+
     @PostMapping
     public ResponseEntity<TransaccionBaseResponse> crearTransferencia(
             @Valid @RequestBody TransaccionRequest request) {
@@ -63,12 +59,6 @@ public class TransaccionController {
         }
     }
 
-    /**
-     * =========================
-     *  TAREA 1.2
-     *  Endpoint de apoyo para probar actualizarEstado
-     * =========================
-     */
     @PatchMapping("/{idInstruccion}/estado")
     public ResponseEntity<TransaccionBaseResponse> actualizarEstado(
             @PathVariable Integer idInstruccion,
@@ -109,12 +99,6 @@ public class TransaccionController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
-    /**
-     * =========================
-     *  TAREA 1.4 (RF-04)
-     *  Consulta de estado por IdInstruccion
-     * =========================
-     */
     @GetMapping("/{idInstruccion}")
     public ResponseEntity<?> consultarEstadoTransaccion(
             @PathVariable Integer idInstruccion) {
@@ -126,7 +110,6 @@ public class TransaccionController {
             return ResponseEntity.ok(detalle);
 
         } catch (EntityNotFoundException e) {
-            // Reutilizamos el formato de error simple (success + mensaje)
             TransaccionBaseResponse error = TransaccionBaseResponse.builder()
                     .success(false)
                     .mensaje(e.getMessage())

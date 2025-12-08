@@ -33,18 +33,14 @@ class TransaccionControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    // Nuevo: usamos @MockitoBean en lugar de @MockBean (MockBean está deprecated)
+
     @MockitoBean
     private IGestorEstadosService gestorEstadosService;
 
-    /**
-     * Test 1: Validación exitosa
-     * CrearTransferencia_DatosValidos_RetornaOk
-     */
+
     @Test
     void CrearTransferencia_DatosValidos_RetornaOk() throws Exception {
 
-        // 1. Preparamos el TransaccionEntity que el servicio devolverá
         TransaccionEntity entity = new TransaccionEntity();
         entity.setIdInstruccion(1);
         entity.setEndToEnd("E2E-TEST-OK-001");
@@ -60,7 +56,7 @@ class TransaccionControllerTest {
         Mockito.when(gestorEstadosService.crearTransaccionRecibida(any(TransaccionRequest.class)))
                 .thenReturn(entity);
 
-        // 2. JSON de entrada válido (formato que ya usas en Postman)
+
         String jsonRequest = """
                 {
                   "Transaccion": {
@@ -79,7 +75,7 @@ class TransaccionControllerTest {
                 }
                 """;
 
-        // 3. Ejecutar POST y validar respuesta
+
         mockMvc.perform(post("/api/v2/switch/transfers")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonRequest))
@@ -90,10 +86,7 @@ class TransaccionControllerTest {
                 .andExpect(jsonPath("$.Mensaje").value("Transacción recibida y en proceso"));
     }
 
-    /**
-     * Test 2: Monto negativo
-     * CrearTransferencia_MontoNegativo_RetornaBadRequest
-     */
+
     @Test
     void CrearTransferencia_MontoNegativo_RetornaBadRequest() throws Exception {
 
@@ -122,19 +115,12 @@ class TransaccionControllerTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.Mensaje").value("El monto debe ser mayor a 0"));
 
-        // Aseguramos que el servicio NO fue llamado (falló antes por @Valid)
         verify(gestorEstadosService, never()).crearTransaccionRecibida(any(TransaccionRequest.class));
     }
 
-    /**
-     * Test 3: Banco origen suspendido
-     * CrearTransferencia_BancoSuspendido_RetornaError
-     */
     @Test
     void CrearTransferencia_BancoSuspendido_RetornaError() throws Exception {
 
-        // Simulamos que el servicio lanza la excepción que ya implementaste:
-        // IllegalStateException("BANCO_ORIGEN_SUSPENDIDO")
         Mockito.when(gestorEstadosService.crearTransaccionRecibida(any(TransaccionRequest.class)))
                 .thenThrow(new IllegalStateException("BANCO_ORIGEN_SUSPENDIDO"));
 

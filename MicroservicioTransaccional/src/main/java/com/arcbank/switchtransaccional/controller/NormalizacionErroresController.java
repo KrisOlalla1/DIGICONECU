@@ -13,12 +13,6 @@ public class NormalizacionErroresController {
 
     private final INormalizacionErroresService normalizacionErroresService;
 
-    /**
-     * Endpoint de apoyo para probar la normalización de errores (TAREA 1.3).
-     *
-     * Ejemplo:
-     * GET /api/v2/switch/errors/normalize?statusCode=404&errorMessage=Cuenta%20no%20existe
-     */
     @GetMapping("/normalize")
     public ResponseEntity<NormalizarErrorResponse> normalizarError(
             @RequestParam int statusCode,
@@ -50,7 +44,3 @@ public class NormalizacionErroresController {
         };
     }
 }
-
-
-//Esto es independiente de tus endpoints de transacciones (/api/v2/switch/transfers).
-//No afecta nada de Tarea 1.1 ni 1.2.

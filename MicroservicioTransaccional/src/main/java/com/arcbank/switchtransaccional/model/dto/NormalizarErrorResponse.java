@@ -5,9 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * DTO solo para probar la Tarea 1.3 con Postman.
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

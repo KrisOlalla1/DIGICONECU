@@ -10,10 +10,6 @@ class NormalizacionErroresServiceImplTest {
     private final INormalizacionErroresService normalizacionErroresService =
             new NormalizacionErroresServiceImpl();
 
-    /**
-     * Test 5: Normalización de errores
-     * NormalizarError_Timeout_RetornaMS03
-     */
     @Test
     void NormalizarError_Timeout_RetornaMS03() {
 

@@ -2,11 +2,6 @@ package com.arcbank.switchtransaccional.service;
 
 import com.arcbank.switchtransaccional.model.dto.TransaccionResponse;
 
-/**
- * Interfaz para el servicio de enrutamiento de transacciones.
- * PERSONA 2: Implementa el enrutamiento y comunicación HTTP con bancos externos.
- * PERSONA 1: Llama a este servicio después de validar y persistir la transacción.
- */
 public interface IEnrutamientoService {
     
     /**
@@ -16,7 +11,7 @@ public interface IEnrutamientoService {
      * 2. Preparar el payload HTTP según el formato del banco
      * 3. Enviar la petición HTTP al endpoint del banco
      * 4. Procesar la respuesta y actualizar el estado de la transacción
-     * 
+     *
      * @param idInstruccion ID de la transacción a procesar
      * @return TransaccionResponse con el resultado del enrutamiento
      * @throws RuntimeException si hay errores en la comunicación HTTP

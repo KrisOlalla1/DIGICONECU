@@ -15,7 +15,7 @@ public class TransaccionRequest {
 
     @NotNull(message = "El campo Transaccion es obligatorio")
     @Valid
-    @JsonProperty("Transaccion")   // <-- clave raíz del JSON
+    @JsonProperty("Transaccion")
     private Transaccion transaccion;
 
     @Data

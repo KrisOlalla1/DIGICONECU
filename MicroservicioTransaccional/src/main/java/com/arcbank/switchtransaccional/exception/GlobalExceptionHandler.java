@@ -11,10 +11,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    /**
-     * Maneja errores de validación de @Valid
-     * (por ejemplo: monto negativo, campos @NotNull, etc.)
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<TransaccionBaseResponse> handleValidationException(MethodArgumentNotValidException ex) {
 

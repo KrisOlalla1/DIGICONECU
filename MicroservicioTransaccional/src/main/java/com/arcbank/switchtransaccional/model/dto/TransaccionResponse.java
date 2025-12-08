@@ -12,11 +12,8 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * DTO para respuestas del API de transacciones.
- */
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
-// (Opcional) solo para que el orden visual sea igual al que quieres
 @JsonPropertyOrder({ "success", "IdInstruccion", "TraceId", "EstadoActual", "Mensaje" })
 @Data
 @NoArgsConstructor
@@ -24,27 +21,20 @@ import java.time.LocalDateTime;
 @Builder
 public class TransaccionResponse {
 
-    // success
     @JsonProperty("success")
     private Boolean exitoso;
 
-    // IdInstruccion
     @JsonProperty("IdInstruccion")
     private Integer idInstruccion;
 
-    // TraceId
     @JsonProperty("TraceId")
     private String traceId;
 
-    // EstadoActual
     @JsonProperty("EstadoActual")
     private String estadoActual;
 
-    // Mensaje
     @JsonProperty("Mensaje")
     private String mensaje;
-
-    // ---- CAMPOS EXTRA (quedarán en null y NO saldrán en el JSON) ----
 
     private String endToEnd;
 

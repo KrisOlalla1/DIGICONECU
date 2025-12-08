@@ -33,14 +33,10 @@ class GestorEstadosServiceImplTest {
         gestorEstadosService = new GestorEstadosServiceImpl(transaccionRepository, entidadBancariaRepository);
     }
 
-    /**
-     * Test 4: Actualización de estado
-     * ActualizarEstado_TransaccionExiste_ActualizaCorrectamente
-     */
     @Test
     void ActualizarEstado_TransaccionExiste_ActualizaCorrectamente() {
 
-        // 1. Transacción existente en BD
+
         TransaccionEntity entity = new TransaccionEntity();
         entity.setIdInstruccion(10);
         entity.setEndToEnd("E2E-ESTADO-TEST");
@@ -54,10 +50,8 @@ class GestorEstadosServiceImplTest {
 
         when(transaccionRepository.findById(10)).thenReturn(Optional.of(entity));
 
-        // 2. Ejecutar actualización de estado
         gestorEstadosService.actualizarEstado(10, "COMPLETADO", "AC00");
 
-        // 3. Capturar lo que se guardó
         ArgumentCaptor<TransaccionEntity> captor = ArgumentCaptor.forClass(TransaccionEntity.class);
         verify(transaccionRepository, times(1)).save(captor.capture());
 
