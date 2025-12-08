@@ -1,6 +1,6 @@
-package com.arcbank.switch.middleware;
+package com.arcbank.switchtransaccional.middleware;
 
-import com.arcbank.switch.service.IIdempotenciaService;
+import com.arcbank.switchtransaccional.service.IIdempotenciaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;

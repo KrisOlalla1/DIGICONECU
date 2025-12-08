@@ -1,12 +1,8 @@
-package com.arcbank.switch;
+package com.arcbank.switchtransaccional;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-/**
- * Clase principal del microservicio Switch Transaccional.
- * Punto de entrada de la aplicación Spring Boot.
- */
 @SpringBootApplication
 public class SwitchTransaccionalApplication {
 

@@ -1,4 +1,4 @@
-package com.arcbank.switch.config;
+package com.arcbank.switchtransaccional.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

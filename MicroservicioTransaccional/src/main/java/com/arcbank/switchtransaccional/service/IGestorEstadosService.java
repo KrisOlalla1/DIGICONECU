@@ -1,20 +1,28 @@
-package com.arcbank.switch.service;
+package com.arcbank.switchtransaccional.service;
 
-import com.arcbank.switch.model.dto.TransaccionRequest;
-import com.arcbank.switch.model.entity.TransaccionEntity;
-
-import java.util.Optional;
+import com.arcbank.switchtransaccional.model.dto.ConsultaEstadoTransaccionResponse;
+import com.arcbank.switchtransaccional.model.dto.TransaccionRequest;
+import com.arcbank.switchtransaccional.model.entity.TransaccionEntity;
 
 public interface IGestorEstadosService {
 
-    // Crear transacción en estado RECIBIDO
+    /**
+     * TAREA 1.1:
+     * Valida la transacción entrante, verifica bancos, EndToEnd y persiste con estado RECIBIDO.
+     */
     TransaccionEntity crearTransaccionRecibida(TransaccionRequest request);
 
-    // Cambiar estado y opcionalmente código respuesta
-    void actualizarEstado(Integer idInstruccion, String nuevoEstado, String codigoRespuesta);
+    /**
+     * TAREA 1.2:
+     * Actualiza el estado y opcionalmente el código de respuesta final.
+     */
+    void actualizarEstado(Integer idInstruccion, String nuevoEstado, String codigoRespuestaFinal);
 
-    // Consultas
-    Optional<TransaccionEntity> obtenerPorId(Integer idInstruccion);
+    /**
+     * Se usará luego en TAREA 1.4 para consultar el estado.
+     */
+    String obtenerEstado(Integer idInstruccion);
 
-    Optional<TransaccionEntity> obtenerPorEndToEnd(String endToEnd);
+    // 🔹 TAREA 1.4: detalle de la transacción
+    ConsultaEstadoTransaccionResponse consultarTransaccion(Integer idInstruccion);
 }

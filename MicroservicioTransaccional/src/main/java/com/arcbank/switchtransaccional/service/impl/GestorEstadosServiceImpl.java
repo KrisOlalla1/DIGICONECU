@@ -1,110 +1,211 @@
-package com.arcbank.switch.service.impl;
+package com.arcbank.switchtransaccional.service.impl;
 
-import com.arcbank.switch.model.dto.TransaccionRequest;
-import com.arcbank.switch.model.entity.EntidadBancariaEntity;
-import com.arcbank.switch.model.entity.TransaccionEntity;
-import com.arcbank.switch.repository.EntidadBancariaRepository;
-import com.arcbank.switch.repository.TransaccionRepository;
-import com.arcbank.switch.service.IGestorEstadosService;
+import com.arcbank.switchtransaccional.model.dto.ConsultaEstadoTransaccionResponse;
+import com.arcbank.switchtransaccional.model.dto.TransaccionRequest;
+import com.arcbank.switchtransaccional.model.entity.EntidadBancariaEntity;
+import com.arcbank.switchtransaccional.model.entity.TransaccionEntity;
+import com.arcbank.switchtransaccional.repository.EntidadBancariaRepository;
+import com.arcbank.switchtransaccional.repository.TransaccionRepository;
+import com.arcbank.switchtransaccional.service.IGestorEstadosService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class GestorEstadosServiceImpl implements IGestorEstadosService {
+@Slf4j
+public class GestorEstadosServiceImpl implements IGestorEstadosService{
 
     private final TransaccionRepository transaccionRepository;
     private final EntidadBancariaRepository entidadBancariaRepository;
 
+    /**
+     * =========================
+     *  TAREA 1.1 (ya OK)
+     * =========================
+     */
     @Override
     @Transactional
     public TransaccionEntity crearTransaccionRecibida(TransaccionRequest request) {
 
-        // 1) Obtener el objeto interno Transaccion
+        if (request.getTransaccion() == null) {
+            throw new IllegalArgumentException("El campo Transaccion es obligatorio");
+        }
+
         TransaccionRequest.Transaccion t = request.getTransaccion();
 
-        // 2) Validaciones de negocio extra (además de las @Valid):
-        if (t.getMonto().compareTo(java.math.BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("El monto debe ser mayor a 0");
+        // 1. Validar EndToEnd obligatorio
+        if (t.getEndToEnd() == null || t.getEndToEnd().isBlank()) {
+            throw new IllegalArgumentException("El EndToEnd es obligatorio");
         }
 
-        if (t.getIdBancoOrigen().equals(t.getIdBancoDestino())) {
-            throw new IllegalArgumentException("IdBancoOrigen e IdBancoDestino no pueden ser iguales");
+        // 2. Validar EndToEnd único
+        if (transaccionRepository.existsByEndToEnd(t.getEndToEnd())) {
+            throw new IllegalArgumentException("Ya existe una transacción con EndToEnd " + t.getEndToEnd());
         }
 
-        // 3) Verificar bancos en BD
-        EntidadBancariaEntity bancoOrigen = entidadBancariaRepository.findById(t.getIdBancoOrigen())
-                .orElseThrow(() -> new EntityNotFoundException("Banco origen no existe"));
+        // 3. Validar bancos origen/destino presentes
+        Integer idOrigen = t.getIdBancoOrigen();
+        Integer idDestino = t.getIdBancoDestino();
 
-        EntidadBancariaEntity bancoDestino = entidadBancariaRepository.findById(t.getIdBancoDestino())
-                .orElseThrow(() -> new EntityNotFoundException("Banco destino no existe"));
+        if (idOrigen == null) {
+            throw new IllegalArgumentException("IdBancoOrigen es obligatorio");
+        }
+        if (idDestino == null) {
+            throw new IllegalArgumentException("IdBancoDestino es obligatorio");
+        }
 
-        // 4) Validar estado de bancos
+        // 4. Validar que origen != destino
+        if (idOrigen.equals(idDestino)) {
+            throw new IllegalArgumentException("IdBancoOrigen y IdBancoDestino no pueden ser iguales");
+        }
+
+        // 5. Verificar existencia de bancos
+        EntidadBancariaEntity bancoOrigen = entidadBancariaRepository.findById(idOrigen)
+                .orElseThrow(() -> new EntityNotFoundException("IdBancoOrigen no existe: " + idOrigen));
+
+        EntidadBancariaEntity bancoDestino = entidadBancariaRepository.findById(idDestino)
+                .orElseThrow(() -> new EntityNotFoundException("IdBancoDestino no existe: " + idDestino));
+
+        // 6. Validar estados de bancos
         if ("SUSPENDIDO".equalsIgnoreCase(bancoOrigen.getEstado())) {
             throw new IllegalStateException("BANCO_ORIGEN_SUSPENDIDO");
         }
+
         if ("SUSPENDIDO".equalsIgnoreCase(bancoDestino.getEstado())) {
             throw new IllegalStateException("BANCO_DESTINO_SUSPENDIDO");
         }
 
-        // 5) Mapear al entity
-        TransaccionEntity entity = new TransaccionEntity();
-        entity.setEndToEnd(t.getEndToEnd());
-        entity.setTraceId(UUID.randomUUID().toString());
-        entity.setIdBancoOrigen(t.getIdBancoOrigen());
-        entity.setIdBancoDestino(t.getIdBancoDestino());
-        entity.setCuentaOrigen(t.getCuentaOrigen());
-        entity.setCuentaDestino(t.getCuentaDestino());
-        entity.setMonto(t.getMonto());
-        entity.setMensaje(t.getMensaje());
-
-        // Cambiar estado de "Enviado" -> "RECIBIDO"
-        entity.setEstadoActual("RECIBIDO");
-
-        // FechaCreacion: usar la que viene o la actual
-        if (t.getFechaCreacion() != null) {
-            entity.setFechaCreacion(t.getFechaCreacion());
-        } else {
-            entity.setFechaCreacion(LocalDateTime.now());
+        // 7. Determinar FechaCreacion
+        LocalDateTime fechaCreacion = t.getFechaCreacion();
+        if (fechaCreacion == null) {
+            fechaCreacion = LocalDateTime.now();
         }
 
-        // CodigoRespuestaFinal se queda null al inicio
-        entity.setCodigoRespuestaFinal(null);
+        // 8. Generar TraceId
+        String traceId = UUID.randomUUID().toString();
 
-        // 6) Guardar en BD (INSERT) y devolver con IdInstruccion generado
-        return transaccionRepository.save(entity);
+        // 9. Construir entidad a persistir (EstadoActual = RECIBIDO)
+        TransaccionEntity entity = TransaccionEntity.builder()
+                .endToEnd(t.getEndToEnd())
+                .traceId(traceId)
+                .idBancoOrigen(idOrigen)
+                .idBancoDestino(idDestino)
+                .cuentaOrigen(t.getCuentaOrigen())
+                .cuentaDestino(t.getCuentaDestino())
+                .monto(t.getMonto())
+                .mensaje(t.getMensaje())
+                .estadoActual("RECIBIDO")       // Se fuerza RECIBIDO aunque venga "Enviado"
+                .fechaCreacion(fechaCreacion)   // del request o actual
+                .codigoRespuestaFinal(null)
+                .build();
+
+        // 10. Persistir
+        TransaccionEntity guardada = transaccionRepository.save(entity);
+
+        log.info("Transacción {} recibida y persistida con IdInstruccion={}",
+                guardada.getEndToEnd(), guardada.getIdInstruccion());
+
+        return guardada;
     }
 
+    /**
+     * =========================
+     *  TAREA 1.2
+     *  Gestión de estados
+     * =========================
+     */
     @Override
     @Transactional
-    public void actualizarEstado(Integer idInstruccion, String nuevoEstado, String codigoRespuesta) {
-        TransaccionEntity entity = transaccionRepository.findById(idInstruccion)
-                .orElseThrow(() -> new EntityNotFoundException("Transacción no encontrada"));
+    public void actualizarEstado(Integer idInstruccion, String nuevoEstado, String codigoRespuestaFinal) {
 
+        TransaccionEntity entity = transaccionRepository.findById(idInstruccion)
+                .orElseThrow(() -> new EntityNotFoundException("Transacción no encontrada: " + idInstruccion));
+
+        if (nuevoEstado == null || nuevoEstado.isBlank()) {
+            throw new IllegalArgumentException("El nuevo estado es obligatorio");
+        }
+
+        log.info("Actualizando estado de IdInstruccion={} de {} a {}",
+                idInstruccion, entity.getEstadoActual(), nuevoEstado);
+
+        // Actualizar estado
         entity.setEstadoActual(nuevoEstado);
 
-        if (codigoRespuesta != null) {
-            entity.setCodigoRespuestaFinal(codigoRespuesta);
+        // Actualizar código de respuesta final solo si viene
+        if (codigoRespuestaFinal != null && !codigoRespuestaFinal.isBlank()) {
+            entity.setCodigoRespuestaFinal(codigoRespuestaFinal);
+        }
+
+        // Si es estado final, marcamos fecha de procesamiento (opcional, pero útil)
+        if (esEstadoFinal(nuevoEstado)) {
+            entity.setFechaProcesamiento(LocalDateTime.now());
         }
 
         transaccionRepository.save(entity);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<TransaccionEntity> obtenerPorId(Integer idInstruccion) {
-        return transaccionRepository.findById(idInstruccion);
+    private boolean esEstadoFinal(String estado) {
+        String upper = estado.toUpperCase();
+        return upper.equals("COMPLETADO")
+                || upper.equals("EXITOSO")   // por si Persona 2 usa "Exitoso"
+                || upper.equals("FALLIDO")
+                || upper.equals("TIMEOUT");
     }
 
+    /**
+     * Se usará en Tarea 1.4
+     */
     @Override
     @Transactional(readOnly = true)
-    public Optional<TransaccionEntity> obtenerPorEndToEnd(String endToEnd) {
-        return transaccionRepository.findByEndToEnd(endToEnd);
+    public ConsultaEstadoTransaccionResponse consultarTransaccion(Integer idInstruccion) {
+
+        // 1. Buscar la transacción
+        TransaccionEntity tx = transaccionRepository.findById(idInstruccion)
+                .orElseThrow(() -> new EntityNotFoundException("Transacción no encontrada: " + idInstruccion));
+
+        // 2. Buscar bancos origen y destino
+        EntidadBancariaEntity bancoOrigen = entidadBancariaRepository.findById(tx.getIdBancoOrigen())
+                .orElseThrow(() -> new EntityNotFoundException("Banco origen no encontrado: " + tx.getIdBancoOrigen()));
+
+        EntidadBancariaEntity bancoDestino = entidadBancariaRepository.findById(tx.getIdBancoDestino())
+                .orElseThrow(() -> new EntityNotFoundException("Banco destino no encontrado: " + tx.getIdBancoDestino()));
+
+        // 3. (RF dice: si está TIMEOUT, coordinar con Persona 2)
+        // Aquí lo dejamos como comentario/log. Persona 2 podrá usar esto
+        // para reintentos o manejo especial.
+        if ("TIMEOUT".equalsIgnoreCase(tx.getEstadoActual())) {
+            log.warn("Transacción {} en estado TIMEOUT. Coordinar con Persona 2 / enrutamiento.",
+                    tx.getIdInstruccion());
+        }
+
+        // 4. Armar respuesta exacta al formato requerido
+        return ConsultaEstadoTransaccionResponse.builder()
+                .idInstruccion(tx.getIdInstruccion())
+                .endToEnd(tx.getEndToEnd())
+                .traceId(tx.getTraceId())
+                .estadoActual(tx.getEstadoActual())
+                .codigoRespuestaFinal(tx.getCodigoRespuestaFinal())
+                .fechaCreacion(tx.getFechaCreacion())
+                .monto(tx.getMonto())
+                .bancoOrigen(bancoOrigen.getNombre())
+                .bancoDestino(bancoDestino.getNombre())
+                .build();
     }
+    @Override
+    @Transactional(readOnly = true)
+    public String obtenerEstado(Integer idInstruccion) {
+
+        TransaccionEntity entity = transaccionRepository.findById(idInstruccion)
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Transacción no encontrada: " + idInstruccion));
+
+        return entity.getEstadoActual();
+    }
+
 }

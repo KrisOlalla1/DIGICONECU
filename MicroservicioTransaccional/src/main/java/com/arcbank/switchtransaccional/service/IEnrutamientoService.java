@@ -1,6 +1,6 @@
-package com.arcbank.switch.service;
+package com.arcbank.switchtransaccional.service;
 
-import com.arcbank.switch.model.dto.TransaccionResponse;
+import com.arcbank.switchtransaccional.model.dto.TransaccionResponse;
 
 /**
  * Interfaz para el servicio de enrutamiento de transacciones.

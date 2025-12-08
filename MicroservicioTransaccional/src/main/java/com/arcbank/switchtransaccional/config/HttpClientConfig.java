@@ -1,4 +1,4 @@
-package com.arcbank.switch.config;
+package com.arcbank.switchtransaccional.config;
 
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.config.RequestConfig;

@@ -1,17 +1,20 @@
-package com.arcbank.switch.controller;
+package com.arcbank.switchtransaccional.controller;
 
-import com.arcbank.switch.model.dto.TransaccionRequest;
-import com.arcbank.switch.model.dto.TransaccionResponse;
-import com.arcbank.switch.model.entity.TransaccionEntity;
-import com.arcbank.switch.service.IGestorEstadosService;
+import com.arcbank.switchtransaccional.model.dto.ActualizarEstadoRequest;
+import com.arcbank.switchtransaccional.model.dto.TransaccionBaseResponse;
+import com.arcbank.switchtransaccional.model.dto.TransaccionRequest;
+import com.arcbank.switchtransaccional.model.entity.TransaccionEntity;
+import com.arcbank.switchtransaccional.repository.TransaccionRepository;
+import com.arcbank.switchtransaccional.service.IGestorEstadosService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.arcbank.switchtransaccional.model.dto.ConsultaEstadoTransaccionResponse;
+import com.arcbank.switchtransaccional.model.dto.TransaccionBaseResponse;
 
-import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/v2/switch/transfers")
@@ -19,49 +22,118 @@ import java.time.LocalDateTime;
 public class TransaccionController {
 
     private final IGestorEstadosService gestorEstadosService;
+    private final TransaccionRepository transaccionRepository;
 
+    /**
+     * =========================
+     *  TAREA 1.1
+     * =========================
+     */
     @PostMapping
-    public ResponseEntity<TransaccionResponse> crearTransferencia(
+    public ResponseEntity<TransaccionBaseResponse> crearTransferencia(
             @Valid @RequestBody TransaccionRequest request) {
 
         try {
-            // Llama al servicio para validar y persistir
             TransaccionEntity entity = gestorEstadosService.crearTransaccionRecibida(request);
 
-            // Armar respuesta
-            TransaccionResponse response = TransaccionResponse.builder()
+            TransaccionBaseResponse response = TransaccionBaseResponse.builder()
+                    .success(true)
                     .idInstruccion(entity.getIdInstruccion())
-                    .endToEnd(entity.getEndToEnd())
                     .traceId(entity.getTraceId())
-                    .idBancoOrigen(entity.getIdBancoOrigen())
-                    .idBancoDestino(entity.getIdBancoDestino())
-                    .cuentaOrigen(entity.getCuentaOrigen())
-                    .cuentaDestino(entity.getCuentaDestino())
-                    .monto(entity.getMonto())
-                    .mensaje(entity.getMensaje())
-                    .estadoActual(entity.getEstadoActual()) // = RECIBIDO
-                    .fechaCreacion(entity.getFechaCreacion())
-                    .fechaProcesamiento(LocalDateTime.now())
-                    .mensajeRespuesta("Transacción recibida y en proceso")
-                    .exitoso(true)
+                    .estadoActual(entity.getEstadoActual())            // RECIBIDO
+                    .mensaje("Transacción recibida y en proceso")
                     .build();
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
 
         } catch (IllegalStateException e) {
             // BANCO_ORIGEN_SUSPENDIDO / BANCO_DESTINO_SUSPENDIDO
-            TransaccionResponse response = TransaccionResponse.builder()
-                    .exitoso(false)
-                    .mensajeRespuesta(e.getMessage())
+            TransaccionBaseResponse response = TransaccionBaseResponse.builder()
+                    .success(false)
+                    .mensaje(e.getMessage())
                     .build();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 
         } catch (IllegalArgumentException | EntityNotFoundException e) {
-            TransaccionResponse response = TransaccionResponse.builder()
-                    .exitoso(false)
-                    .mensajeRespuesta(e.getMessage())
+            TransaccionBaseResponse response = TransaccionBaseResponse.builder()
+                    .success(false)
+                    .mensaje(e.getMessage())
                     .build();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
+
+    /**
+     * =========================
+     *  TAREA 1.2
+     *  Endpoint de apoyo para probar actualizarEstado
+     * =========================
+     */
+    @PatchMapping("/{idInstruccion}/estado")
+    public ResponseEntity<TransaccionBaseResponse> actualizarEstado(
+            @PathVariable Integer idInstruccion,
+            @RequestBody ActualizarEstadoRequest request) {
+
+        try {
+            gestorEstadosService.actualizarEstado(
+                    idInstruccion,
+                    request.getNuevoEstado(),
+                    request.getCodigoRespuestaFinal()
+            );
+
+            TransaccionEntity entity = transaccionRepository.findById(idInstruccion)
+                    .orElseThrow(() -> new EntityNotFoundException("Transacción no encontrada: " + idInstruccion));
+
+            TransaccionBaseResponse response = TransaccionBaseResponse.builder()
+                    .success(true)
+                    .idInstruccion(entity.getIdInstruccion())
+                    .traceId(entity.getTraceId())
+                    .estadoActual(entity.getEstadoActual())
+                    .mensaje("Estado actualizado correctamente")
+                    .build();
+
+            return ResponseEntity.ok(response);
+
+        } catch (EntityNotFoundException e) {
+            TransaccionBaseResponse response = TransaccionBaseResponse.builder()
+                    .success(false)
+                    .mensaje(e.getMessage())
+                    .build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+
+        } catch (IllegalArgumentException e) {
+            TransaccionBaseResponse response = TransaccionBaseResponse.builder()
+                    .success(false)
+                    .mensaje(e.getMessage())
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+    }
+    /**
+     * =========================
+     *  TAREA 1.4 (RF-04)
+     *  Consulta de estado por IdInstruccion
+     * =========================
+     */
+    @GetMapping("/{idInstruccion}")
+    public ResponseEntity<?> consultarEstadoTransaccion(
+            @PathVariable Integer idInstruccion) {
+
+        try {
+            ConsultaEstadoTransaccionResponse detalle =
+                    gestorEstadosService.consultarTransaccion(idInstruccion);
+
+            return ResponseEntity.ok(detalle);
+
+        } catch (EntityNotFoundException e) {
+            // Reutilizamos el formato de error simple (success + mensaje)
+            TransaccionBaseResponse error = TransaccionBaseResponse.builder()
+                    .success(false)
+                    .mensaje(e.getMessage())
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        }
+    }
+
 }

@@ -1,4 +1,4 @@
-package com.arcbank.switch.service;
+package com.arcbank.switchtransaccional.service;
 
 /**
  * Interfaz para el servicio de idempotencia con Redis.

@@ -1,6 +1,6 @@
-package com.arcbank.switch.service.impl;
+package com.arcbank.switchtransaccional.service.impl;
 
-import com.arcbank.switch.service.IIdempotenciaService;
+import com.arcbank.switchtransaccional.service.IIdempotenciaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
