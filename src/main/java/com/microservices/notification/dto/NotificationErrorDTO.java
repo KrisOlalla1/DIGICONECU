@@ -9,8 +9,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class NotificationResponseDTO {
-    private Boolean success;
-    private NotificationDataDTO data;
-    private NotificationErrorDTO error;
+public class NotificationErrorDTO {
+    private Boolean exitoso;
+    private String error;
+    private Integer intentosRealizados;
+    private Long tiempoTotal;
 }

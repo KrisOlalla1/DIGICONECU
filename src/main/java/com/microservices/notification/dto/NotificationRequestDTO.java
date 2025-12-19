@@ -10,7 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NotificationRequestDTO {
-    private String urlDestino;
-    private String payload;
-    private String bancoDestino;
+    private String endpoint;
+    private Object payload;
+    private Integer timeoutMs;
+    private Integer maxReintentos;
 }
