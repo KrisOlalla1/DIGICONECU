@@ -1,0 +1,86 @@
+﻿[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------< com.switch.transaccional:account-balance-service >----------
+[INFO] Building account-balance-service 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.4.1:clean (default-clean) @ account-balance-service ---
+[INFO] Deleting C:\Users\krist\OneDrive\Escritorio\MicroAccountBalance\account-balance-service\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ account-balance-service ---
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ account-balance-service ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 14 source files with javac [debug parameters release 17] to target\classes
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/AccountBalanceServiceApplication.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/dto/CompletarTransferenciaRequest.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/dto/CompletarTransferenciaResponse.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/dto/CongelarFondosRequest.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/dto/CongelarFondosResponse.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/dto/VerificarSaldoRequest.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/dto/VerificarSaldoResponse.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/service/BalanceService.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/service/BalanceService.java:[3,12] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/service/BalanceService.java:[4,12] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/service/BalanceService.java:[5,12] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/service/BalanceService.java:[6,12] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/service/BalanceService.java:[7,12] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/service/BalanceService.java:[8,12] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/domain/entity/CuentaPrefondeo.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/domain/entity/OperacionPrefondeo.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/domain/entity/OperacionPrefondeo.java:[3,12] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/domain/enums/TipoOperacion.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/domain/repository/CuentaPrefondeoRepository.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/domain/repository/CuentaPrefondeoRepository.java:[3,12] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/domain/repository/OperacionPrefondeoRepository.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/domain/repository/OperacionPrefondeoRepository.java:[3,12] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/interfaces/rest/BalanceController.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/interfaces/rest/BalanceController.java:[3,12] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/interfaces/rest/BalanceController.java:[4,12] <identifier> expected
+[INFO] 25 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.117 s
+[INFO] Finished at: 2025-12-19T16:57:57-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.14.1:compile (default-compile) on project account-balance-service: Compilation failure: Compilation failure: 
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/AccountBalanceServiceApplication.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/dto/CompletarTransferenciaRequest.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/dto/CompletarTransferenciaResponse.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/dto/CongelarFondosRequest.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/dto/CongelarFondosResponse.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/dto/VerificarSaldoRequest.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/dto/VerificarSaldoResponse.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/service/BalanceService.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/service/BalanceService.java:[3,12] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/service/BalanceService.java:[4,12] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/service/BalanceService.java:[5,12] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/service/BalanceService.java:[6,12] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/service/BalanceService.java:[7,12] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/application/service/BalanceService.java:[8,12] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/domain/entity/CuentaPrefondeo.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/domain/entity/OperacionPrefondeo.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/domain/entity/OperacionPrefondeo.java:[3,12] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/domain/enums/TipoOperacion.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/domain/repository/CuentaPrefondeoRepository.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/domain/repository/CuentaPrefondeoRepository.java:[3,12] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/domain/repository/OperacionPrefondeoRepository.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/domain/repository/OperacionPrefondeoRepository.java:[3,12] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/interfaces/rest/BalanceController.java:[1,13] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/interfaces/rest/BalanceController.java:[3,12] <identifier> expected
+[ERROR] /C:/Users/krist/OneDrive/Escritorio/MicroAccountBalance/account-balance-service/src/main/java/com/switch/transaccional/accountbalance/interfaces/rest/BalanceController.java:[4,12] <identifier> expected
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
