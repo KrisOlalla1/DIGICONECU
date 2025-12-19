@@ -126,9 +126,39 @@ notification.max-retries=4
 ```
 
 ## Ejecución
+
+### Opción 1: Maven (Desarrollo)
 ```bash
 cd notificationservice
 mvn spring-boot:run
+```
+
+### Opción 2: Docker
+```bash
+# Construir imagen
+docker build -t notification-service:latest .
+
+# Ejecutar contenedor
+docker run -d \
+  -p 8086:8086 \
+  --name notification-service \
+  -e JAVA_OPTS="-Xmx512m -Xms256m" \
+  notification-service:latest
+
+# Ver logs
+docker logs -f notification-service
+
+# Detener
+docker stop notification-service
+docker rm notification-service
+```
+
+### Opción 3: Docker Compose (Recomendado para desarrollo)
+Desde la raíz del proyecto:
+```bash
+docker-compose up -d notification-service
+docker-compose logs -f notification-service
+docker-compose down
 ```
 
 ## Ejemplos de Uso
