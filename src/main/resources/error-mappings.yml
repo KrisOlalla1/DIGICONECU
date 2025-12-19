@@ -1,0 +1,56 @@
+mapeos:
+  PICHINCHA:
+    ERROR_99: AM04
+    CUENTA_NO_EXISTE: AC01
+    CUENTA_CERRADA: AC04
+    TIMEOUT_CORE: MS03
+    CUENTA_BLOQUEADA: AC06
+    
+  GUAYAQUIL:
+    ERR_SALDO: AM04
+    ERR_CTA_BLOQ: AC04
+    ERR_SISTEMA: MS03
+    ERR_CUENTA_INVALIDA: AC01
+    
+  PACIFICO:
+    COD_100: AM04
+    COD_200: AC01
+    COD_300: AC04
+    COD_500: MS03
+    
+  BANCO_A:
+    "001": AM04
+    "002": AC06
+    
+  BANCO_B:
+    "100": MS03
+    "200": AC01
+    
+  BANCO_C:
+    E01: AC01
+
+codigos_iso:
+  AM04:
+    descripcion: "Insufficient Funds"
+    mensaje: "El banco no tiene fondos suficientes para completar la transacción"
+  AC01:
+    descripcion: "Incorrect Account Number"
+    mensaje: "El número de cuenta destino es incorrecto o no existe"
+  AC04:
+    descripcion: "Closed Account"
+    mensaje: "La cuenta destino está cerrada"
+  AC06:
+    descripcion: "Blocked Account"
+    mensaje: "La cuenta destino está bloqueada"
+  AG01:
+    descripcion: "Transaction Forbidden"
+    mensaje: "La transacción está prohibida por reglas de negocio"
+  MS03:
+    descripcion: "Technical Error"
+    mensaje: "Error técnico en el sistema del banco destino"
+  DUPL:
+    descripcion: "Duplicate Transaction"
+    mensaje: "La transacción ya fue procesada previamente"
+  UNKNOWN:
+    descripcion: "Unknown Error"
+    mensaje: "Error desconocido del banco"

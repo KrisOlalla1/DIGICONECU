@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ErrorRequestDTO {
-    private String bancoOrigen;
-    private String codigoExterno;
+    private String bancoCodigo;
+    private String codigoOriginal;
+    private String mensajeOriginal;
 }

@@ -1,67 +1,305 @@
 # Error Mapping Service
 
 ## Descripción General
-Este microservicio traduce códigos de error externos de diferentes bancos a un formato interno estandarizado. Es 100% stateless: no usa base de datos, toda la lógica y configuración está en memoria.
+Microservicio 100% stateless que traduce códigos de error propietarios de bancos a códigos estándar ISO 20022. Carga configuración desde archivo YAML y mantiene mapeos en memoria con capacidad de actualización dinámica.
+
+## Características
+- ✅ Mapeo a códigos ISO 20022 (AM04, AC01, AC04, AC06, AG01, MS03, DUPL)
+- ✅ Carga de configuración desde archivo YAML
+- ✅ Cache en memoria con ConcurrentHashMap
+- ✅ Fallback automático a código "UNKNOWN"
+- ✅ Endpoints de administración (agregar mapeos, reload)
+- ✅ Endpoint para listar todos los códigos ISO
+- ✅ Logging de traducciones
 
 ## Tecnologías
 - Java 21
 - Spring Boot 3.5.9
+- SnakeYAML
 - Maven
 - Lombok
-- MapStruct
 
-## Arquitectura
-- **Modelo de dominio:** POJO `ErrorDefinition` (sin anotaciones de persistencia)
-- **DTOs:** `ErrorRequestDTO` y `ErrorResponseDTO` para entrada/salida
-- **Mapper:** `ErrorMapper` (MapStruct) para convertir entre modelo y DTO
-- **Servicio:** `ErrorMappingService` con un `Map<String, ErrorDefinition>` estático e inmutable
-- **Controlador:** `ErrorMappingController` expone el endpoint REST
+## Puerto
+**8087**
 
-## Endpoint Principal
+## Endpoints
+
+### 1. Traducir Error
 ```
 POST /api/v2/error-mapping/traducir
 ```
-- **Request:** JSON con `bancoOrigen` y `codigoExterno`
-- **Response:** JSON con los datos traducidos o 404 si no existe
 
-## Ejemplo de Request
+**Request:**
 ```json
 {
-  "bancoOrigen": "BANCO_A",
-  "codigoExterno": "001"
+  "bancoCodigo": "PICHINCHA",
+  "codigoOriginal": "ERROR_99",
+  "mensajeOriginal": "No hay plata en la cuenta"
 }
 ```
 
-## Ejemplo de Response
+**Response:**
 ```json
 {
-  "bancoOrigen": "BANCO_A",
-  "codigoExterno": "001",
-  "codigoInterno": "ERR_FONDOS_INSUFICIENTES",
-  "mensaje": "Fondos insuficientes en la cuenta de origen"
+  "success": true,
+  "data": {
+    "codigoISO": "AM04",
+    "descripcion": "Insufficient Funds",
+    "mensajeEstandar": "El banco no tiene fondos suficientes para completar la transacción"
+  }
 }
 ```
 
-## Explicación del Código
-- **ErrorDefinition:** POJO con campos para banco, código externo/interno y mensaje. Usa Lombok para reducir código repetitivo.
-- **ErrorRequestDTO/ErrorResponseDTO:** Separan el contrato de la API del modelo interno.
-- **ErrorMapper:** MapStruct genera el código de conversión entre modelo y DTO automáticamente.
-- **ErrorMappingService:** Contiene el mapa de errores y el método `traducirError` que busca en el mapa usando la clave `bancoOrigen-codigoExterno`.
-- **ErrorMappingController:** Expone el endpoint POST, usa inyección por constructor y programación funcional con Optional para responder 200 o 404.
+### 2. Agregar Mapeos (Admin)
+```
+POST /api/v2/error-mapping/agregar
+```
 
-## Stateless
-- No hay base de datos ni archivos externos.
-- El mapa de errores está hardcodeado y es inmutable.
-- El servicio puede escalar horizontalmente sin problemas de sincronización.
+**Request:**
+```json
+{
+  "bancoCodigo": "PRODUBANCO",
+  "mapeos": {
+    "ERR_100": "AM04",
+    "ERR_200": "AC01",
+    "ERR_TIMEOUT": "MS03"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "status": "OK",
+  "mensaje": "Mapeos agregados correctamente"
+}
+```
+
+### 3. Listar Códigos ISO
+```
+GET /api/v2/error-mapping/codigos-iso
+```
+
+**Response:**
+```json
+[
+  {
+    "codigo": "AM04",
+    "descripcion": "Insufficient Funds",
+    "mensaje": "El banco no tiene fondos suficientes para completar la transacción"
+  },
+  {
+    "codigo": "AC01",
+    "descripcion": "Incorrect Account Number",
+    "mensaje": "El número de cuenta destino es incorrecto o no existe"
+  },
+  ...
+]
+```
+
+### 4. Recargar Configuración
+```
+POST /api/v2/error-mapping/reload
+```
+
+**Response:**
+```json
+{
+  "status": "OK",
+  "mensaje": "Configuración recargada"
+}
+```
+
+### 5. Health Check
+```
+GET /health
+```
+
+**Response:** `"OK"`
+
+## Configuración YAML
+
+Archivo: `src/main/resources/error-mappings.yml`
+
+```yaml
+mapeos:
+  PICHINCHA:
+    ERROR_99: AM04
+    CUENTA_NO_EXISTE: AC01
+    CUENTA_CERRADA: AC04
+    TIMEOUT_CORE: MS03
+    CUENTA_BLOQUEADA: AC06
+    
+  GUAYAQUIL:
+    ERR_SALDO: AM04
+    ERR_CTA_BLOQ: AC04
+    ERR_SISTEMA: MS03
+    ERR_CUENTA_INVALIDA: AC01
+
+codigos_iso:
+  AM04:
+    descripcion: "Insufficient Funds"
+    mensaje: "El banco no tiene fondos suficientes para completar la transacción"
+  AC01:
+    descripcion: "Incorrect Account Number"
+    mensaje: "El número de cuenta destino es incorrecto o no existe"
+  ...
+```
+
+## Códigos ISO 20022 Soportados
+
+| Código | Descripción | Uso |
+|--------|-------------|-----|
+| AM04 | Insufficient Funds | Fondos insuficientes |
+| AC01 | Incorrect Account Number | Cuenta incorrecta/no existe |
+| AC04 | Closed Account | Cuenta cerrada |
+| AC06 | Blocked Account | Cuenta bloqueada |
+| AG01 | Transaction Forbidden | Transacción prohibida |
+| MS03 | Technical Error | Error técnico/timeout |
+| DUPL | Duplicate Transaction | Transacción duplicada |
+| UNKNOWN | Unknown Error | Error desconocido (fallback) |
+
+## Variables de Entorno
+```properties
+PORT=8087
+CONFIG_FILE=classpath:error-mappings.yml
+ENABLE_ADMIN_ENDPOINTS=true
+LOG_LEVEL=INFO
+```
+
+## Configuración
+Ver `application.properties`:
+```properties
+error-mapping.config-file=classpath:error-mappings.yml
+error-mapping.enable-admin-endpoints=true
+```
 
 ## Ejecución
-```
+```bash
 cd errormappingservice
 mvn spring-boot:run
 ```
 
+## Ejemplos de Uso
+
+### Traducir error de Pichincha
+```bash
+curl -X POST http://localhost:8087/api/v2/error-mapping/traducir \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bancoCodigo": "PICHINCHA",
+    "codigoOriginal": "ERROR_99",
+    "mensajeOriginal": "Saldo insuficiente"
+  }'
+```
+
+### Código no encontrado (fallback a UNKNOWN)
+```bash
+curl -X POST http://localhost:8087/api/v2/error-mapping/traducir \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bancoCodigo": "BANCO_NUEVO",
+    "codigoOriginal": "XYZ_999",
+    "mensajeOriginal": "Error desconocido"
+  }'
+```
+
+Response:
+```json
+{
+  "success": true,
+  "data": {
+    "codigoISO": "UNKNOWN",
+    "descripcion": "Unknown Error",
+    "mensajeEstandar": "Error desconocido del banco"
+  }
+}
+```
+
+### Agregar mapeos dinámicamente
+```bash
+curl -X POST http://localhost:8087/api/v2/error-mapping/agregar \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bancoCodigo": "BOLIVARIANO",
+    "mapeos": {
+      "E001": "AM04",
+      "E002": "AC01",
+      "E999": "MS03"
+    }
+  }'
+```
+
+### Listar todos los códigos ISO
+```bash
+curl http://localhost:8087/api/v2/error-mapping/codigos-iso
+```
+
+### Recargar configuración desde archivo
+```bash
+curl -X POST http://localhost:8087/api/v2/error-mapping/reload
+```
+
+## Arquitectura Interna
+
+### ErrorMappingService
+- Carga archivo YAML al iniciar (`@PostConstruct`)
+- Almacena mapeos en `ConcurrentHashMap` (thread-safe)
+- Método `traducirError()` busca en mapeo del banco
+- Fallback a "UNKNOWN" si no encuentra mapeo
+- Método `agregarMapeo()` para agregar dinámicamente
+- Método `cargarConfiguracion()` para reload
+
+### ErrorMappingController
+- Endpoint `/traducir`: Siempre retorna HTTP 200 con success=true
+- Endpoint `/agregar`: Administración de mapeos
+- Endpoint `/codigos-iso`: Lista completa de códigos ISO
+- Endpoint `/reload`: Recarga desde archivo YAML
+- Health check endpoint
+
+### DTOs
+- `ErrorRequestDTO`: Entrada con bancoCodigo, codigoOriginal, mensajeOriginal
+- `ErrorResponseDTO`: Salida con success y data
+- `ErrorDataDTO`: codigoISO, descripcion, mensajeEstandar
+- `AddMappingRequestDTO`: Para agregar mapeos dinámicamente
+- `CodigoISODTO`: Para listar códigos ISO
+
+## Logging
+```
+INFO - Cargados 6 mapeos de bancos
+INFO - Cargados 8 códigos ISO
+INFO - Traduciendo error - Banco: PICHINCHA, Código: ERROR_99
+WARN - No se encontró mapeo para banco: BANCO_NUEVO, código: XYZ_999
+INFO - Agregados 3 mapeos para el banco BOLIVARIANO
+```
+
+## Comportamiento de Fallback
+
+1. **Banco existe, código existe**: Retorna el código ISO mapeado
+2. **Banco existe, código NO existe**: Retorna "UNKNOWN"
+3. **Banco NO existe**: Retorna "UNKNOWN"
+
+**Siempre retorna HTTP 200** con `success: true` - nunca 404.
+
+## Casos de Uso
+
+### Switch Transaccional
+1. Banco destino rechaza transacción con código propietario "ERROR_99"
+2. Switch llama a `/traducir` con bancoCodigo="PICHINCHA" y codigoOriginal="ERROR_99"
+3. Servicio retorna codigoISO="AM04" (Insufficient Funds)
+4. Switch estandariza la respuesta usando el código ISO
+
+### Configuración Dinámica
+1. Se integra un nuevo banco "PRODUBANCO"
+2. Admin llama a `/agregar` con los mapeos del nuevo banco
+3. Mapeos se agregan a memoria sin reiniciar el servicio
+4. Opcionalmente, se actualiza el archivo YAML y se llama a `/reload`
+
 ## Mejoras Futuras
-- Cargar el mapa de errores desde un archivo externo o servicio de configuración.
-- Validación de entrada con anotaciones Bean Validation.
-- Documentación OpenAPI/Swagger.
-- Tests unitarios y de integración.
+- Soporte para regex en códigos (ERR_* → MS03)
+- Mapeos globales (aplican a todos los bancos)
+- Persistencia de mapeos dinámicos
+- Cache con expiración
+- Documentación OpenAPI/Swagger
+- Tests unitarios y de integración
+

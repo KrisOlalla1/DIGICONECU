@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ErrorResponseDTO {
-    private Boolean success;
-    private ErrorDataDTO data;
+public class ErrorDataDTO {
+    private String codigoISO;
+    private String descripcion;
+    private String mensajeEstandar;
 }

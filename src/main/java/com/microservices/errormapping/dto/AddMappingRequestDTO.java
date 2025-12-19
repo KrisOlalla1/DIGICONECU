@@ -5,11 +5,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ErrorResponseDTO {
-    private Boolean success;
-    private ErrorDataDTO data;
+public class AddMappingRequestDTO {
+    private String bancoCodigo;
+    private Map<String, String> mapeos;
 }
