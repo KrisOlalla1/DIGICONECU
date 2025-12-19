@@ -175,9 +175,39 @@ error-mapping.enable-admin-endpoints=true
 ```
 
 ## Ejecución
+
+### Opción 1: Maven (Desarrollo)
 ```bash
 cd errormappingservice
 mvn spring-boot:run
+```
+
+### Opción 2: Docker
+```bash
+# Construir imagen
+docker build -t error-mapping-service:latest .
+
+# Ejecutar contenedor
+docker run -d \
+  -p 8087:8087 \
+  --name error-mapping-service \
+  -e JAVA_OPTS="-Xmx512m -Xms256m" \
+  error-mapping-service:latest
+
+# Ver logs
+docker logs -f error-mapping-service
+
+# Detener
+docker stop error-mapping-service
+docker rm error-mapping-service
+```
+
+### Opción 3: Docker Compose (Recomendado para desarrollo)
+Desde la raíz del proyecto:
+```bash
+docker-compose up -d error-mapping-service
+docker-compose logs -f error-mapping-service
+docker-compose down
 ```
 
 ## Ejemplos de Uso
