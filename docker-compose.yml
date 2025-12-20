@@ -1,0 +1,325 @@
+# =============================================================================
+# SWITCH TRANSACCIONAL - DOCKER COMPOSE UNIFICADO
+# =============================================================================
+# Levanta todos los 7 microservicios + bases de datos PostgreSQL
+# Ejecutar: docker-compose up --build
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # BASES DE DATOS
+  # ===========================================================================
+  
+  postgres-payment:
+    image: postgres:15-alpine
+    container_name: postgres-payment
+    environment:
+      POSTGRES_DB: PaymentProcessingDB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5441:5432"
+    volumes:
+      - payment_data:/var/lib/postgresql/data
+    networks:
+      - switch-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d PaymentProcessingDB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-network:
+    image: postgres:15-alpine
+    container_name: postgres-network
+    environment:
+      POSTGRES_DB: NetworkManagementDB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5442:5432"
+    volumes:
+      - network_data:/var/lib/postgresql/data
+    networks:
+      - switch-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d NetworkManagementDB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-balance:
+    image: postgres:15-alpine
+    container_name: postgres-balance
+    environment:
+      POSTGRES_DB: AccountBalanceDB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5443:5432"
+    volumes:
+      - balance_data:/var/lib/postgresql/data
+      - ./DIGICONECU-feature-MicroAccountBalance/src/main/resources/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - switch-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d AccountBalanceDB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-clearing:
+    image: postgres:15-alpine
+    container_name: postgres-clearing
+    environment:
+      POSTGRES_DB: ClearingDB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5444:5432"
+    volumes:
+      - clearing_data:/var/lib/postgresql/data
+    networks:
+      - switch-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ClearingDB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-return:
+    image: postgres:15-alpine
+    container_name: postgres-return
+    environment:
+      POSTGRES_DB: ReturnManagementDB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5445:5432"
+    volumes:
+      - return_data:/var/lib/postgresql/data
+    networks:
+      - switch-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ReturnManagementDB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================================================
+  # MICROSERVICIOS
+  # ===========================================================================
+
+  # ---------------------------------------------------------------------------
+  # 1. PAYMENT PROCESSING SERVICE (Puerto 8081)
+  # ---------------------------------------------------------------------------
+  payment-processing:
+    build:
+      context: ./DIGICONECU-feature-MicroPaymentProcessing
+      dockerfile: Dockerfile
+    container_name: payment-processing
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-payment:5432/PaymentProcessingDB
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      # URLs de otros servicios
+      - NETWORK_SERVICE_URL=http://network-management:8082
+      - BALANCE_SERVICE_URL=http://account-balance:8083
+      - NOTIFICATION_SERVICE_URL=http://notification:8086
+      - ERROR_MAPPING_URL=http://error-mapping:8087
+    depends_on:
+      postgres-payment:
+        condition: service_healthy
+    networks:
+      - switch-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8081/api/v2/transfers/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ---------------------------------------------------------------------------
+  # 2. NETWORK MANAGEMENT SERVICE (Puerto 8082)
+  # ---------------------------------------------------------------------------
+  network-management:
+    build:
+      context: ./DIGICONECU-network-management-service
+      dockerfile: Dockerfile
+    container_name: network-management
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-network:5432/NetworkManagementDB
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      postgres-network:
+        condition: service_healthy
+    networks:
+      - switch-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8082/api/v2/routing/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ---------------------------------------------------------------------------
+  # 3. ACCOUNT BALANCE SERVICE (Puerto 8083)
+  # ---------------------------------------------------------------------------
+  account-balance:
+    build:
+      context: ./DIGICONECU-feature-MicroAccountBalance
+      dockerfile: Dockerfile
+    container_name: account-balance
+    ports:
+      - "8083:8083"
+    environment:
+      - DB_HOST=postgres-balance
+      - DB_PORT=5432
+      - DB_NAME=AccountBalanceDB
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=none
+    depends_on:
+      postgres-balance:
+        condition: service_healthy
+    networks:
+      - switch-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8083/api/v2/balance/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ---------------------------------------------------------------------------
+  # 4. CLEARING SERVICE (Puerto 8084)
+  # ---------------------------------------------------------------------------
+  clearing-service:
+    build:
+      context: ./DIGICONECU-feature-MicroClearingService
+      dockerfile: Dockerfile
+    container_name: clearing-service
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-clearing:5432/ClearingDB
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      # URLs de otros servicios
+      - INTEGRATION_PAYMENT_PROCESSING_BASE_URL=http://payment-processing:8081
+      - INTEGRATION_PAYMENT_PROCESSING_CONNECT_TIMEOUT_MS=5000
+      - INTEGRATION_PAYMENT_PROCESSING_READ_TIMEOUT_MS=30000
+    depends_on:
+      postgres-clearing:
+        condition: service_healthy
+    networks:
+      - switch-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8084/api/v2/clearing/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ---------------------------------------------------------------------------
+  # 5. RETURN MANAGEMENT SERVICE (Puerto 8085)
+  # ---------------------------------------------------------------------------
+  return-management:
+    build:
+      context: ./DIGICONECU-feature-MicroReturnManagmentService
+      dockerfile: Dockerfile
+    container_name: return-management
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-return:5432/ReturnManagementDB
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      # URLs de otros servicios
+      - INTEGRATION_PAYMENT_PROCESSING_BASE_URL=http://payment-processing:8081
+      - INTEGRATION_PAYMENT_PROCESSING_CONNECT_TIMEOUT_MS=5000
+      - INTEGRATION_PAYMENT_PROCESSING_READ_TIMEOUT_MS=30000
+      - INTEGRATION_ACCOUNT_BALANCE_BASE_URL=http://account-balance:8083
+      - INTEGRATION_ACCOUNT_BALANCE_CONNECT_TIMEOUT_MS=5000
+      - INTEGRATION_ACCOUNT_BALANCE_READ_TIMEOUT_MS=30000
+    depends_on:
+      postgres-return:
+        condition: service_healthy
+    networks:
+      - switch-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8085/api/v2/returns/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ---------------------------------------------------------------------------
+  # 6. NOTIFICATION SERVICE (Puerto 8086) - STATELESS
+  # ---------------------------------------------------------------------------
+  notification:
+    build:
+      context: ./DIGICONECU-notificacion-service
+      dockerfile: Dockerfile
+    container_name: notification
+    ports:
+      - "8086:8086"
+    networks:
+      - switch-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8086/api/v2/notification/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ---------------------------------------------------------------------------
+  # 7. ERROR MAPPING SERVICE (Puerto 8087) - STATELESS
+  # ---------------------------------------------------------------------------
+  error-mapping:
+    build:
+      context: ./DIGICONECU-error-mapping-service
+      dockerfile: Dockerfile
+    container_name: error-mapping
+    ports:
+      - "8087:8087"
+    networks:
+      - switch-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8087/api/v2/error-mapping/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+# =============================================================================
+# REDES
+# =============================================================================
+networks:
+  switch-network:
+    driver: bridge
+    name: switch-transaccional-network
+
+# =============================================================================
+# VOLÚMENES PERSISTENTES
+# =============================================================================
+volumes:
+  payment_data:
+    name: switch_payment_data
+  network_data:
+    name: switch_network_data
+  balance_data:
+    name: switch_balance_data
+  clearing_data:
+    name: switch_clearing_data
+  return_data:
+    name: switch_return_data
