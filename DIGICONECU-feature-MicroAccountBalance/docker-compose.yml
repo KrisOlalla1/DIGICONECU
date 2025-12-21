@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: account-balance-db
+    environment:
+      POSTGRES_DB: AccountBalanceDB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d AccountBalanceDB" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  account-balance-service:
+    build: .
+    container_name: account-balance-service
+    ports:
+      - "8083:8083"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: AccountBalanceDB
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

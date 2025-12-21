@@ -1,0 +1,100 @@
+mapeos:
+  # Banco Pichincha
+  PICHINCHA:
+    ERROR_99: AM04
+    CUENTA_NO_EXISTE: AC01
+    CUENTA_CERRADA: AC04
+    TIMEOUT_CORE: MS03
+    CUENTA_BLOQUEADA: AC06
+    LIMITE_EXCEDIDO: AG01
+    TX_DUPLICADA: DUPL
+
+  # Banco Guayaquil
+  GUAYAQUIL:
+    ERR_SALDO: AM04
+    ERR_CTA_INVALIDA: AC01
+    ERR_CTA_BLOQ: AC06
+    ERR_SISTEMA: MS03
+    ERR_MONTO_MAX: AG01
+    ERR_CUENTA_CERRADA: AC04
+
+  # Banco Pacífico
+  PACIFICO:
+    COD_100: AM04
+    COD_200: AC01
+    COD_300: AC04
+    COD_400: AC06
+    COD_500: MS03
+    COD_600: AG01
+
+  # Banco Bolivariano
+  BOLIVARIANO:
+    SF_001: AM04
+    AC_001: AC01
+    AC_002: AC04
+    AC_003: AC06
+    TEC_001: MS03
+
+  # Banco Internacional
+  INTERNACIONAL:
+    INSUFFICIENT_FUNDS: AM04
+    INVALID_ACCOUNT: AC01
+    CLOSED_ACCOUNT: AC04
+    BLOCKED_ACCOUNT: AC06
+    SYSTEM_ERROR: MS03
+
+  BANCO_A:
+    "001": AM04
+    "002": AC06
+    "003": AC01
+
+  BANCO_B:
+    "100": MS03
+    "200": AC01
+    "300": AM04
+
+  BANCO_C:
+    E01: AC01
+    E02: AM04
+    E03: MS03
+
+codigos_iso:
+  AM04:
+    descripcion: "Insufficient Funds"
+    mensaje: "El banco no tiene fondos suficientes para completar la transacción"
+    categoria: "negocio"
+
+  AC01:
+    descripcion: "Incorrect Account Number"
+    mensaje: "El número de cuenta destino es incorrecto o no existe"
+    categoria: "negocio"
+
+  AC04:
+    descripcion: "Closed Account"
+    mensaje: "La cuenta destino está cerrada"
+    categoria: "negocio"
+
+  AC06:
+    descripcion: "Blocked Account"
+    mensaje: "La cuenta destino está bloqueada"
+    categoria: "negocio"
+
+  AG01:
+    descripcion: "Transaction Forbidden"
+    mensaje: "La transacción está prohibida por reglas de negocio"
+    categoria: "negocio"
+
+  MS03:
+    descripcion: "Technical Error"
+    mensaje: "Error técnico en el sistema del banco destino"
+    categoria: "tecnico"
+
+  DUPL:
+    descripcion: "Duplicate Transaction"
+    mensaje: "La transacción ya fue procesada previamente"
+    categoria: "negocio"
+
+  UNKNOWN:
+    descripcion: "Unknown Error"
+    mensaje: "Error desconocido o no mapeado del banco"
+    categoria: "tecnico"

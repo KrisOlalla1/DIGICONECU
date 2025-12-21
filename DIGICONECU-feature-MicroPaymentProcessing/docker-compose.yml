@@ -1,0 +1,34 @@
+version: '3.8'
+services:
+  postgres-payment:
+    image: postgres:15-alpine
+    container_name: payment-processing-db
+    environment:
+      POSTGRES_DB: PaymentProcessingDB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5431:5432"
+    volumes:
+      - payment_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d PaymentProcessingDB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  payment-processing-service:
+    build: .
+    container_name: payment-processing-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-payment:5432/PaymentProcessingDB
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: admin
+    depends_on:
+      postgres-payment:
+        condition: service_healthy
+
+volumes:
+  payment_data:

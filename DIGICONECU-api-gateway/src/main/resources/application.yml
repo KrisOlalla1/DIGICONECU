@@ -1,0 +1,119 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        # Payment Processing Service
+        - id: payment-processing
+          uri: http://${PAYMENT_HOST:localhost}:8081
+          predicates:
+            - Path=/api/v2/transfers/**
+          filters:
+            - name: RateLimiter
+              args:
+                requests-per-second: 100
+                burst-capacity: 200
+
+        # Network Management Service
+        - id: network-management
+          uri: http://${NETWORK_HOST:localhost}:8082
+          predicates:
+            - Path=/api/v1/red/**
+          filters:
+            - name: RateLimiter
+              args:
+                requests-per-second: 50
+                burst-capacity: 100
+
+        # Account Balance Service
+        - id: account-balance
+          uri: http://${BALANCE_HOST:localhost}:8083
+          predicates:
+            - Path=/api/v1/saldos/**
+          filters:
+            - name: RateLimiter
+              args:
+                requests-per-second: 100
+                burst-capacity: 200
+
+        # Clearing Service
+        - id: clearing-service
+          uri: http://${CLEARING_HOST:localhost}:8084
+          predicates:
+            - Path=/api/v2/clearing/**
+          filters:
+            - name: RateLimiter
+              args:
+                requests-per-second: 20
+                burst-capacity: 50
+
+        # Return Management Service
+        - id: return-management
+          uri: http://${RETURN_HOST:localhost}:8085
+          predicates:
+            - Path=/api/v2/returns/**
+          filters:
+            - name: RateLimiter
+              args:
+                requests-per-second: 50
+                burst-capacity: 100
+
+        # Notification Service
+        - id: notification-service
+          uri: http://${NOTIFICATION_HOST:localhost}:8086
+          predicates:
+            - Path=/api/v1/notifications/**
+          filters:
+            - name: RateLimiter
+              args:
+                requests-per-second: 200
+                burst-capacity: 500
+
+        # Error Mapping Service
+        - id: error-mapping
+          uri: http://${ERROR_MAPPING_HOST:localhost}:8087
+          predicates:
+            - Path=/api/v1/errors/**
+          filters:
+            - name: RateLimiter
+              args:
+                requests-per-second: 100
+                burst-capacity: 200
+
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+        - AddResponseHeader=X-Gateway-Version, 1.0.0
+
+      globalcors:
+        corsConfigurations:
+          "[/**]":
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+
+# Rate Limiting Configuration
+rate-limiter:
+  default-requests-per-second: 100
+  default-burst-capacity: 200
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,gateway,info
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+
+# Logging
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    com.switchecu.gateway: DEBUG
