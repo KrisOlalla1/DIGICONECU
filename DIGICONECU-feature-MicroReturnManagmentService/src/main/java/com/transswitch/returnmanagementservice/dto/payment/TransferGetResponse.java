@@ -23,6 +23,9 @@ public class TransferGetResponse {
         private BigDecimal monto;
         private String bancoOrigen;
         private String bancoDestino;
+        private String cuentaOrigen;
+        private String cuentaDestino;
+        private String moneda;
         private String fechaCreacion;
 
         public TransferData() {

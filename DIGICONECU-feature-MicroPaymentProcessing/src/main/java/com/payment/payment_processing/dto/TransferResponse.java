@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -15,11 +16,10 @@ public class TransferResponse {
     @Data
     @Builder
     public static class DataBody {
-        private String instructionId;
+        private UUID instructionId;
         private String estado;
         private String bancoDestino;
         private LocalDateTime timestamp;
-        // Campos extra para el GET
         private BigDecimal monto;
         private String bancoOrigen;
         private LocalDateTime fechaCreacion;

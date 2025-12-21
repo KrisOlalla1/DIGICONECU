@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,13 +28,16 @@ public class ClearingService {
     private final CiclosCompensacionRepository repository;
     private final PaymentProcessingClient paymentClient;
     private final ObjectMapper objectMapper;
+    private final ISO20022GeneratorService iso20022Generator;
 
     public ClearingService(CiclosCompensacionRepository repository,
             PaymentProcessingClient paymentClient,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            ISO20022GeneratorService iso20022Generator) {
         this.repository = repository;
         this.paymentClient = paymentClient;
         this.objectMapper = objectMapper;
+        this.iso20022Generator = iso20022Generator;
     }
 
     public CiclosCompensacion ejecutar(LocalDate fechaCiclo) {
@@ -110,14 +114,24 @@ public class ClearingService {
 
         CiclosCompensacion ciclo = new CiclosCompensacion();
         ciclo.setFechaCiclo(fechaCiclo);
-        ciclo.setHoraCorte(LocalDateTime.now());
+        ciclo.setHoraCorte(LocalDateTime.now(ZoneOffset.UTC));
         ciclo.setTotalTransacciones(txs.size());
         ciclo.setPosicionesNetas(posicionesJson);
         ciclo.setEstado("Completado");
-        ciclo.setArchivoLiquidacionUrl(null);
+
+        // Generar archivo ISO 20022 XML
+        String archivoXml = iso20022Generator.generarArchivoLiquidacion(ciclo, posiciones);
+        String nombreArchivo = iso20022Generator.generarNombreArchivo(fechaCiclo, "xml");
+        ciclo.setArchivoLiquidacionUrl("/clearing/archivos/" + nombreArchivo);
+        ciclo.setArchivoXmlContenido(archivoXml);
+
+        // Generar archivo plano CSV
+        String archivoCsv = iso20022Generator.generarArchivoPlano(ciclo, posiciones);
+        ciclo.setArchivoCsvContenido(archivoCsv);
 
         CiclosCompensacion savedCiclo = repository.save(ciclo);
-        log.info("Clearing completado exitosamente para fecha: {}. Total transacciones: {}", fechaCiclo, txs.size());
+        log.info("Clearing completado exitosamente para fecha: {}. Total transacciones: {}. Archivos generados.",
+                fechaCiclo, txs.size());
 
         return savedCiclo;
     }

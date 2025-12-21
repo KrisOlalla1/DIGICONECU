@@ -9,25 +9,25 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "Enrutamiento")
+@Table(name = "\"Enrutamiento\"")
 public class Enrutamiento {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "Id", updatable = false, nullable = false)
+    @Column(name = "\"Id\"", updatable = false, nullable = false)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "BancoId", nullable = false)
+    @JoinColumn(name = "\"BancoId\"", nullable = false)
     private Banco banco;
 
-    @Column(name = "BinInicio", nullable = false, length = 6)
+    @Column(name = "\"BinInicio\"", nullable = false, length = 6)
     private String binInicio;
 
-    @Column(name = "BinFin", nullable = false, length = 6)
+    @Column(name = "\"BinFin\"", nullable = false, length = 6)
     private String binFin;
 
-    @Column(name = "Activo")
+    @Column(name = "\"Activo\"")
     private Boolean activo;
 
     public Enrutamiento() {
@@ -39,8 +39,10 @@ public class Enrutamiento {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Enrutamiento that = (Enrutamiento) o;
         return Objects.equals(id, that.id);
     }

@@ -1,5 +1,6 @@
 package com.digiconecu.network_management_service.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.Getter;
 import lombok.Setter;
 import java.util.UUID;
@@ -10,7 +11,10 @@ public class BancoDto {
     private UUID id;
     private String codigo;
     private String nombre;
-    private String puntoEnlace; // Mapeado desde 'endpoint' en la base de datos
+
+    @JsonAlias({ "puntoEnlace", "endpoint" })
+    private String endpoint;
+
     private String estado;
 
     public BancoDto() {

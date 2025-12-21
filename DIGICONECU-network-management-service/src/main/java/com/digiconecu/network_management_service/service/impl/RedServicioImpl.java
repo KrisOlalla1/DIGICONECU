@@ -4,6 +4,7 @@ import com.digiconecu.network_management_service.dto.*;
 import com.digiconecu.network_management_service.exception.*;
 import com.digiconecu.network_management_service.model.*;
 import com.digiconecu.network_management_service.repository.*;
+import com.digiconecu.network_management_service.service.CircuitBreakerService;
 import com.digiconecu.network_management_service.service.RedServicio;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,10 +18,14 @@ public class RedServicioImpl implements RedServicio {
 
     private final BancoRepository bancoRepositorio;
     private final EnrutamientoRepository enrutamientoRepositorio;
+    private final CircuitBreakerService circuitBreaker;
 
-    public RedServicioImpl(BancoRepository bancoRepositorio, EnrutamientoRepository enrutamientoRepositorio) {
+    public RedServicioImpl(BancoRepository bancoRepositorio,
+            EnrutamientoRepository enrutamientoRepositorio,
+            CircuitBreakerService circuitBreaker) {
         this.bancoRepositorio = bancoRepositorio;
         this.enrutamientoRepositorio = enrutamientoRepositorio;
+        this.circuitBreaker = circuitBreaker;
     }
 
     @Override
@@ -46,11 +51,26 @@ public class RedServicioImpl implements RedServicio {
 
         // 5. Mapear la entidad a la respuesta DTO
         Banco banco = enrutamiento.getBanco();
+
+        // 6. Verificar Circuit Breaker
+        if (!circuitBreaker.permiteTráfico(banco.getCodigo())) {
+            throw new ExcepcionNegocio("Banco " + banco.getCodigo() + " no disponible (Circuit Breaker OPEN)", "AC06");
+        }
+
         EnrutamientoRespuestaDto respuesta = new EnrutamientoRespuestaDto();
         respuesta.setBancoCodigo(banco.getCodigo());
         respuesta.setBancoNombre(banco.getNombre());
         respuesta.setPuntoEnlace(banco.getEndpoint());
-        respuesta.setEstado(banco.getEstado());
+
+        // Determinar estado basado en Circuit Breaker
+        String estadoCircuito = banco.getEstadoCircuito();
+        if ("OPEN".equals(estadoCircuito)) {
+            respuesta.setEstado("OFFLINE");
+        } else if ("HALF_OPEN".equals(estadoCircuito)) {
+            respuesta.setEstado("DEGRADED");
+        } else {
+            respuesta.setEstado(banco.getEstado());
+        }
 
         return respuesta;
     }
@@ -63,7 +83,7 @@ public class RedServicioImpl implements RedServicio {
             dto.setId(b.getId());
             dto.setCodigo(b.getCodigo());
             dto.setNombre(b.getNombre());
-            dto.setPuntoEnlace(b.getEndpoint());
+            dto.setEndpoint(b.getEndpoint());
             dto.setEstado(b.getEstado());
             return dto;
         }).collect(Collectors.toList());
@@ -79,7 +99,7 @@ public class RedServicioImpl implements RedServicio {
         dto.setId(b.getId());
         dto.setCodigo(b.getCodigo());
         dto.setNombre(b.getNombre());
-        dto.setPuntoEnlace(b.getEndpoint());
+        dto.setEndpoint(b.getEndpoint());
         dto.setEstado(b.getEstado());
         return dto;
     }
@@ -93,8 +113,8 @@ public class RedServicioImpl implements RedServicio {
         Banco b = new Banco();
         b.setCodigo(dto.getCodigo());
         b.setNombre(dto.getNombre());
-        b.setEndpoint(dto.getPuntoEnlace());
-        b.setEstado("Activo"); // Por defecto se crea activo
+        b.setEndpoint(dto.getEndpoint());
+        b.setEstado("Activo");
         b = bancoRepositorio.save(b);
         dto.setId(b.getId());
         return dto;
@@ -167,6 +187,48 @@ public class RedServicioImpl implements RedServicio {
             map.put("binFin", e.getBinFin());
             map.put("activo", e.getActivo());
             return map;
+        }).collect(Collectors.toList());
+    }
+
+    // ============ CIRCUIT BREAKER METHODS ============
+
+    @Override
+    @Transactional
+    public void registrarFalloBanco(String bancoCodigo, String tipoFallo, Long latenciaMs) {
+        circuitBreaker.registrarFallo(bancoCodigo, tipoFallo, latenciaMs);
+    }
+
+    @Override
+    @Transactional
+    public void registrarExitoBanco(String bancoCodigo, Long latenciaMs) {
+        circuitBreaker.registrarExito(bancoCodigo, latenciaMs);
+    }
+
+    @Override
+    public boolean circuitoPermiteTráfico(String bancoCodigo) {
+        return circuitBreaker.permiteTráfico(bancoCodigo);
+    }
+
+    @Override
+    public String obtenerEstadoCircuito(String bancoCodigo) {
+        return circuitBreaker.obtenerEstadoCircuito(bancoCodigo);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> obtenerEstadisticasCircuitBreaker() {
+        return bancoRepositorio.findAll().stream().map(banco -> {
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("bancoCodigo", banco.getCodigo());
+            stats.put("bancoNombre", banco.getNombre());
+            stats.put("estado", banco.getEstado());
+            stats.put("estadoCircuito", banco.getEstadoCircuito() != null ? banco.getEstadoCircuito() : "CLOSED");
+            stats.put("fallosConsecutivos", banco.getFallosConsecutivos() != null ? banco.getFallosConsecutivos() : 0);
+            stats.put("latenciaPromedioMs", banco.getLatenciaPromedioMs() != null ? banco.getLatenciaPromedioMs() : 0);
+            stats.put("ultimoFallo", banco.getUltimoFallo() != null ? banco.getUltimoFallo().toString() : null);
+            stats.put("ultimoHealthCheck",
+                    banco.getUltimoHealthCheck() != null ? banco.getUltimoHealthCheck().toString() : null);
+            return stats;
         }).collect(Collectors.toList());
     }
 }

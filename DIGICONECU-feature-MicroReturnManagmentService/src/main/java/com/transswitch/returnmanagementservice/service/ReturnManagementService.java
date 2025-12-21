@@ -91,20 +91,60 @@ public class ReturnManagementService {
             }
         }
 
+        // Crear registro de devolución inicialmente en estado PENDIENTE
         Devoluciones d = new Devoluciones();
         d.setReturnInstructionId(returnId);
         d.setTransaccionOriginalInstructionId(originalId);
         d.setBancoIniciadorCodigo(req.getBancoIniciador());
         d.setMotivo(req.getMotivo());
         d.setMonto(req.getMonto());
-        d.setEstado("Completada");
+        d.setEstado("PROCESANDO");
         d.setFechaCreacion(LocalDateTime.now());
 
         Devoluciones saved = repository.save(d);
-        log.info("Devolución creada exitosamente: {}", saved.getReturnInstructionId());
+        log.info("Devolución registrada, creando transacción inversa: {}", saved.getReturnInstructionId());
 
-        // TODO: Llamar a Payment Processing para crear transacción inversa
-        // y actualizar estado de transacción original a REVERTIDA
+        // CREAR TRANSACCIÓN INVERSA REAL (RF-07)
+        // La transacción inversa invierte roles: el banco destino original envía de
+        // vuelta al origen
+        try {
+            var transaccionInversa = paymentClient.crearTransaccionInversa(
+                    returnId.toString(),
+                    originalId.toString(),
+                    tx.getBancoOrigen(),
+                    tx.getBancoDestino(),
+                    tx.getCuentaOrigen(),
+                    tx.getCuentaDestino(),
+                    req.getMonto(),
+                    tx.getMoneda(),
+                    req.getMotivo());
+
+            if (transaccionInversa != null && transaccionInversa.isSuccess()) {
+                saved.setEstado("Completada");
+                saved.setTransaccionInversaId(returnId.toString());
+                log.info("Transacción inversa creada exitosamente para devolución: {}", returnId);
+            } else {
+                saved.setEstado("FALLIDA");
+                String errorMsg = transaccionInversa != null && transaccionInversa.getError() != null
+                        ? transaccionInversa.getError().getMessage()
+                        : "Error desconocido";
+                log.error("Error creando transacción inversa: {}", errorMsg);
+                throw new ServiceException("500", "REVERSE_TX_FAILED",
+                        "Error creando transacción inversa: " + errorMsg);
+            }
+        } catch (ServiceException e) {
+            throw e;
+        } catch (Exception e) {
+            saved.setEstado("FALLIDA");
+            repository.save(saved);
+            log.error("Error inesperado creando transacción inversa", e);
+            throw new ServiceException("500", "REVERSE_TX_ERROR",
+                    "Error creando transacción inversa: " + e.getMessage());
+        }
+
+        saved = repository.save(saved);
+        log.info("Devolución completada exitosamente: {} - Transacción inversa: {}",
+                saved.getReturnInstructionId(), saved.getTransaccionInversaId());
 
         return saved;
     }

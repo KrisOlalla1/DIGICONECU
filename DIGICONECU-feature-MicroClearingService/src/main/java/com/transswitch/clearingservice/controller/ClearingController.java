@@ -4,11 +4,14 @@ import com.transswitch.clearingservice.dto.ApiResponse;
 import com.transswitch.clearingservice.dto.ClearingExecuteRequest;
 import com.transswitch.clearingservice.model.CiclosCompensacion;
 import com.transswitch.clearingservice.service.ClearingService;
+import com.transswitch.clearingservice.service.ISO20022GeneratorService;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,9 +20,11 @@ import org.springframework.web.bind.annotation.*;
 public class ClearingController {
 
     private final ClearingService clearingService;
+    private final ISO20022GeneratorService iso20022Generator;
 
-    public ClearingController(ClearingService clearingService) {
+    public ClearingController(ClearingService clearingService, ISO20022GeneratorService iso20022Generator) {
         this.clearingService = clearingService;
+        this.iso20022Generator = iso20022Generator;
     }
 
     @PostMapping("/ejecutar")
@@ -52,6 +57,65 @@ public class ClearingController {
         CiclosCompensacion ciclo = clearingService.obtenerUltimoCiclo();
         String ts = OffsetDateTime.now().toString();
         return ResponseEntity.ok(ApiResponse.ok(clearingService.toResponse(ciclo), ts));
+    }
+
+    // ============ ARCHIVOS ISO 20022 ============
+
+    /**
+     * Descarga el archivo ISO 20022 XML para un ciclo de compensación
+     */
+    @GetMapping("/archivos/{fecha}/xml")
+    public ResponseEntity<byte[]> descargarArchivoXml(@PathVariable String fecha) {
+        LocalDate f = LocalDate.parse(fecha);
+        CiclosCompensacion ciclo = clearingService.consultar(f);
+
+        if (ciclo.getArchivoXmlContenido() == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        String nombreArchivo = iso20022Generator.generarNombreArchivo(f, "xml");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nombreArchivo + "\"")
+                .contentType(MediaType.APPLICATION_XML)
+                .body(ciclo.getArchivoXmlContenido().getBytes());
+    }
+
+    /**
+     * Descarga el archivo plano CSV para un ciclo de compensación
+     */
+    @GetMapping("/archivos/{fecha}/csv")
+    public ResponseEntity<byte[]> descargarArchivoCsv(@PathVariable String fecha) {
+        LocalDate f = LocalDate.parse(fecha);
+        CiclosCompensacion ciclo = clearingService.consultar(f);
+
+        if (ciclo.getArchivoCsvContenido() == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        String nombreArchivo = iso20022Generator.generarNombreArchivo(f, "csv");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nombreArchivo + "\"")
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(ciclo.getArchivoCsvContenido().getBytes());
+    }
+
+    /**
+     * Vista previa del archivo ISO 20022 XML (sin descargar)
+     */
+    @GetMapping("/archivos/{fecha}/xml/preview")
+    public ResponseEntity<String> previewArchivoXml(@PathVariable String fecha) {
+        LocalDate f = LocalDate.parse(fecha);
+        CiclosCompensacion ciclo = clearingService.consultar(f);
+
+        if (ciclo.getArchivoXmlContenido() == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_XML)
+                .body(ciclo.getArchivoXmlContenido());
     }
 
     @GetMapping("/health")

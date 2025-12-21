@@ -13,35 +13,38 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "Devoluciones")
+@Table(name = "\"Devoluciones\"")
 @Getter
 @Setter
 public class Devoluciones {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "Id", nullable = false)
+    @Column(name = "\"Id\"", nullable = false)
     private UUID id;
 
-    @Column(name = "ReturnInstructionId", nullable = false, unique = true)
+    @Column(name = "\"ReturnInstructionId\"", nullable = false, unique = true)
     private UUID returnInstructionId;
 
-    @Column(name = "TransaccionOriginalInstructionId", nullable = false)
+    @Column(name = "\"TransaccionOriginalInstructionId\"", nullable = false)
     private UUID transaccionOriginalInstructionId;
 
-    @Column(name = "BancoIniciadorCodigo", nullable = false, length = 20)
+    @Column(name = "\"TransaccionInversaId\"", length = 50)
+    private String transaccionInversaId;
+
+    @Column(name = "\"BancoIniciadorCodigo\"", nullable = false, length = 20)
     private String bancoIniciadorCodigo;
 
-    @Column(name = "Motivo", nullable = false, length = 10)
+    @Column(name = "\"Motivo\"", nullable = false, length = 10)
     private String motivo;
 
-    @Column(name = "Monto", nullable = false, precision = 18, scale = 2)
+    @Column(name = "\"Monto\"", nullable = false, precision = 18, scale = 2)
     private BigDecimal monto;
 
-    @Column(name = "Estado", nullable = false, length = 20)
+    @Column(name = "\"Estado\"", nullable = false, length = 20)
     private String estado;
 
-    @Column(name = "FechaCreacion")
+    @Column(name = "\"FechaCreacion\"")
     private LocalDateTime fechaCreacion;
 
     public Devoluciones() {
@@ -53,8 +56,10 @@ public class Devoluciones {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Devoluciones other)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof Devoluciones other))
+            return false;
         return id != null && id.equals(other.id);
     }
 

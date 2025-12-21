@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v2/routing")
+@RequestMapping("/api/v1/red")
 public class RedControlador {
 
     private final RedServicio redServicio;
@@ -24,7 +24,7 @@ public class RedControlador {
      * RF-02: Punto de entrada crítico para resolver la ruta de una transferencia.
      * Es consumido principalmente por el microservicio de Procesamiento de Pagos.
      */
-    @PostMapping("/resolve")
+    @PostMapping("/enrutamiento")
     public ResponseEntity<EnrutamientoRespuestaDto> resolver(@RequestBody EnrutamientoSolicitudDto solicitud) {
         return ResponseEntity.ok(redServicio.resolverEnrutamiento(solicitud));
     }
@@ -64,6 +64,66 @@ public class RedControlador {
         redServicio.actualizarEstadoBanco(codigo, nuevoEstado);
         return ResponseEntity.noContent().build();
     }
+
+    // ============ CIRCUIT BREAKER ENDPOINTS ============
+
+    /**
+     * Registra un fallo para un banco (usado por Payment Processing)
+     */
+    @PostMapping("/bancos/{codigo}/fallos")
+    public ResponseEntity<Map<String, Object>> registrarFallo(
+            @PathVariable String codigo,
+            @RequestBody Map<String, Object> request) {
+        String tipoFallo = (String) request.getOrDefault("tipoFallo", "UNKNOWN");
+        Long latenciaMs = request.containsKey("latenciaMs") ? ((Number) request.get("latenciaMs")).longValue() : null;
+
+        redServicio.registrarFalloBanco(codigo, tipoFallo, latenciaMs);
+
+        return ResponseEntity.ok(Map.of(
+                "status", "OK",
+                "mensaje", "Fallo registrado",
+                "estadoCircuito", redServicio.obtenerEstadoCircuito(codigo)));
+    }
+
+    /**
+     * Registra un éxito para un banco (resetea contador de fallos)
+     */
+    @PostMapping("/bancos/{codigo}/exito")
+    public ResponseEntity<Map<String, Object>> registrarExito(
+            @PathVariable String codigo,
+            @RequestBody(required = false) Map<String, Object> request) {
+        Long latenciaMs = request != null && request.containsKey("latenciaMs")
+                ? ((Number) request.get("latenciaMs")).longValue()
+                : null;
+
+        redServicio.registrarExitoBanco(codigo, latenciaMs);
+
+        return ResponseEntity.ok(Map.of(
+                "status", "OK",
+                "mensaje", "Éxito registrado",
+                "estadoCircuito", redServicio.obtenerEstadoCircuito(codigo)));
+    }
+
+    /**
+     * Obtiene el estado del Circuit Breaker de un banco
+     */
+    @GetMapping("/bancos/{codigo}/circuit-breaker")
+    public ResponseEntity<Map<String, Object>> estadoCircuitBreaker(@PathVariable String codigo) {
+        return ResponseEntity.ok(Map.of(
+                "bancoCodigo", codigo,
+                "estadoCircuito", redServicio.obtenerEstadoCircuito(codigo),
+                "permiteTráfico", redServicio.circuitoPermiteTráfico(codigo)));
+    }
+
+    /**
+     * Obtiene estadísticas de Circuit Breaker de todos los bancos
+     */
+    @GetMapping("/circuit-breaker/stats")
+    public ResponseEntity<List<Map<String, Object>>> estadisticasCircuitBreaker() {
+        return ResponseEntity.ok(redServicio.obtenerEstadisticasCircuitBreaker());
+    }
+
+    // ============ BIN MANAGEMENT ============
 
     /**
      * Agregar un nuevo rango BIN para un banco.

@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "operacionesprefondeo")
+@Table(name = "\"OperacionesPrefondeo\"")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -34,30 +34,30 @@ public class OperacionPrefondeo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id")
+    @Column(name = "\"Id\"")
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cuentaid", nullable = false)
+    @JoinColumn(name = "\"CuentaId\"", nullable = false)
     private CuentaPrefondeo cuenta;
 
-    @Column(name = "instructionid")
+    @Column(name = "\"InstructionId\"")
     private UUID instructionId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "tipooperacion", nullable = false, length = 20)
+    @Column(name = "\"TipoOperacion\"", nullable = false, length = 20)
     private TipoOperacion tipoOperacion;
 
-    @Column(name = "monto", nullable = false, precision = 18, scale = 2)
+    @Column(name = "\"Monto\"", nullable = false, precision = 18, scale = 2)
     private BigDecimal monto;
 
-    @Column(name = "saldoanterior", nullable = false, precision = 18, scale = 2)
+    @Column(name = "\"SaldoAnterior\"", nullable = false, precision = 18, scale = 2)
     private BigDecimal saldoAnterior;
 
-    @Column(name = "saldoposterior", nullable = false, precision = 18, scale = 2)
+    @Column(name = "\"SaldoPosterior\"", nullable = false, precision = 18, scale = 2)
     private BigDecimal saldoPosterior;
 
-    @Column(name = "fechaoperacion")
+    @Column(name = "\"FechaOperacion\"")
     private LocalDateTime fechaOperacion;
 
     @PrePersist

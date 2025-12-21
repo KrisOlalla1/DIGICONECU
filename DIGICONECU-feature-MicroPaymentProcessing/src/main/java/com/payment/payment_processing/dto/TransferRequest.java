@@ -3,25 +3,24 @@ package com.payment.payment_processing.dto;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Data
 public class TransferRequest {
-    @NotNull(message = "instructionId es requerido")
-    @Pattern(regexp = "^[a-zA-Z0-9-]+$", message = "instructionId debe ser alfanumérico o UUID")
-    private String instructionId;
 
-    @NotNull(message = "endToEndId es requerido")
+    private UUID instructionId;
+
     private String endToEndId;
 
     @NotBlank(message = "bancoOrigen es requerido")
     private String bancoOrigen;
 
     @NotBlank(message = "cuentaOrigen es requerida")
-    @Size(min = 6, max = 20, message = "cuentaOrigen debe tener entre 6 y 20 caracteres")
+    @Size(min = 6, max = 50, message = "cuentaOrigen debe tener entre 6 y 50 caracteres")
     private String cuentaOrigen;
 
     @NotBlank(message = "cuentaDestino es requerida")
-    @Size(min = 6, max = 20, message = "cuentaDestino debe tener entre 6 y 20 caracteres")
+    @Size(min = 6, max = 50, message = "cuentaDestino debe tener entre 6 y 50 caracteres")
     private String cuentaDestino;
 
     @NotNull(message = "monto es requerido")

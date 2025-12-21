@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "cuentasprefondeo")
+@Table(name = "\"CuentasPrefondeo\"")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,22 +28,22 @@ public class CuentaPrefondeo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id")
+    @Column(name = "\"Id\"")
     private UUID id;
 
-    @Column(name = "bancocodigo", unique = true, nullable = false, length = 20)
+    @Column(name = "\"BancoCodigo\"", unique = true, nullable = false, length = 20)
     private String bancoCodigo;
 
-    @Column(name = "saldodisponible", nullable = false, precision = 18, scale = 2)
+    @Column(name = "\"SaldoDisponible\"", nullable = false, precision = 18, scale = 2)
     private BigDecimal saldoDisponible;
 
-    @Column(name = "saldocongelado", nullable = false, precision = 18, scale = 2)
+    @Column(name = "\"SaldoCongelado\"", nullable = false, precision = 18, scale = 2)
     private BigDecimal saldoCongelado;
 
-    @Column(name = "moneda", nullable = false, length = 3)
+    @Column(name = "\"Moneda\"", nullable = false, length = 3)
     private String moneda;
 
-    @Column(name = "fechaactualizacion")
+    @Column(name = "\"FechaActualizacion\"")
     private LocalDateTime fechaActualizacion;
 
     @PreUpdate

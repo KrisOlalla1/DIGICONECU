@@ -8,9 +8,13 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface TransaccionRepository extends JpaRepository<Transaccion, String> {
+public interface TransaccionRepository extends JpaRepository<Transaccion, UUID> {
+
+    Optional<Transaccion> findByInstructionId(UUID instructionId);
 
     List<Transaccion> findByEstado(String estado);
 
@@ -20,7 +24,7 @@ public interface TransaccionRepository extends JpaRepository<Transaccion, String
     @Query("SELECT t FROM Transaccion t WHERE t.estado = :estado AND CAST(t.fechaCreacion AS LocalDate) = :fecha")
     List<Transaccion> findByEstadoAndFecha(@Param("estado") String estado, @Param("fecha") LocalDate fecha);
 
-    List<Transaccion> findByBancoOrigen(String bancoOrigen);
+    List<Transaccion> findByBancoOrigenCodigo(String bancoOrigenCodigo);
 
-    List<Transaccion> findByBancoDestino(String bancoDestino);
+    List<Transaccion> findByBancoDestinoCodigo(String bancoDestinoCodigo);
 }

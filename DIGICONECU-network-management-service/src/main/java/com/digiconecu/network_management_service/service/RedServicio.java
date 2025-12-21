@@ -23,4 +23,31 @@ public interface RedServicio {
     void agregarRangoBin(String bancoCodigo, String binInicio, String binFin);
 
     List<Map<String, Object>> listarBins(String bancoCodigo);
+
+    // ============ CIRCUIT BREAKER ============
+
+    /**
+     * Registra un fallo para un banco (para Circuit Breaker)
+     */
+    void registrarFalloBanco(String bancoCodigo, String tipoFallo, Long latenciaMs);
+
+    /**
+     * Registra un éxito para un banco (para Circuit Breaker)
+     */
+    void registrarExitoBanco(String bancoCodigo, Long latenciaMs);
+
+    /**
+     * Verifica si el circuito permite tráfico hacia un banco
+     */
+    boolean circuitoPermiteTráfico(String bancoCodigo);
+
+    /**
+     * Obtiene el estado del circuito de un banco
+     */
+    String obtenerEstadoCircuito(String bancoCodigo);
+
+    /**
+     * Obtiene estadísticas de Circuit Breaker para todos los bancos
+     */
+    List<Map<String, Object>> obtenerEstadisticasCircuitBreaker();
 }

@@ -1,11 +1,46 @@
 # =============================================================================
 # SWITCH TRANSACCIONAL - DOCKER COMPOSE UNIFICADO
 # =============================================================================
-# Levanta todos los 7 microservicios + bases de datos PostgreSQL
+# Levanta todos los 8 microservicios + API Gateway + bases de datos PostgreSQL
 # Ejecutar: docker-compose up --build
 # =============================================================================
 
 services:
+  # ===========================================================================
+  # API GATEWAY - ENTRY POINT (Puerto 8080)
+  # ===========================================================================
+  api-gateway:
+    build:
+      context: ./DIGICONECU-api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - PAYMENT_HOST=payment-processing
+      - NETWORK_HOST=network-management
+      - BALANCE_HOST=account-balance
+      - CLEARING_HOST=clearing-service
+      - RETURN_HOST=return-management
+      - NOTIFICATION_HOST=notification
+      - ERROR_MAPPING_HOST=error-mapping
+    depends_on:
+      - payment-processing
+      - network-management
+      - account-balance
+      - clearing-service
+      - return-management
+      - notification
+      - error-mapping
+    networks:
+      - switch-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
   # ===========================================================================
   # BASES DE DATOS
   # ===========================================================================
@@ -21,6 +56,7 @@ services:
       - "5441:5432"
     volumes:
       - payment_data:/var/lib/postgresql/data
+      - ./DIGICONECU-feature-MicroPaymentProcessing/src/main/resources/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - switch-network
     healthcheck:
@@ -40,6 +76,7 @@ services:
       - "5442:5432"
     volumes:
       - network_data:/var/lib/postgresql/data
+      - ./DIGICONECU-network-management-service/src/main/resources/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - switch-network
     healthcheck:
@@ -79,6 +116,7 @@ services:
       - "5444:5432"
     volumes:
       - clearing_data:/var/lib/postgresql/data
+      - ./DIGICONECU-feature-MicroClearingService/src/main/resources/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - switch-network
     healthcheck:
@@ -98,10 +136,30 @@ services:
       - "5445:5432"
     volumes:
       - return_data:/var/lib/postgresql/data
+      - ./DIGICONECU-feature-MicroReturnManagmentService/src/main/resources/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - switch-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d ReturnManagementDB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================================================
+  # REDIS - CACHÉ DE IDEMPOTENCIA (RF-03)
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: redis-idempotencia
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - switch-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -125,6 +183,10 @@ services:
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      # Redis para idempotencia (RF-03)
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - IDEMPOTENCIA_TTL_HOURS=24
       # URLs de otros servicios
       - NETWORK_SERVICE_URL=http://network-management:8082
       - BALANCE_SERVICE_URL=http://account-balance:8083
@@ -132,6 +194,8 @@ services:
       - ERROR_MAPPING_URL=http://error-mapping:8087
     depends_on:
       postgres-payment:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - switch-network
@@ -163,7 +227,7 @@ services:
     networks:
       - switch-network
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:8082/api/v2/routing/health || exit 1"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8082/api/v1/red/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -323,3 +387,5 @@ volumes:
     name: switch_clearing_data
   return_data:
     name: switch_return_data
+  redis_data:
+    name: switch_redis_data

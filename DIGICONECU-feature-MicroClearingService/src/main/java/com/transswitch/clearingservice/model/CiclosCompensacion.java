@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -13,33 +14,41 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "CiclosCompensacion")
+@Table(name = "\"CiclosCompensacion\"")
 @Getter
 @Setter
 public class CiclosCompensacion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "Id", nullable = false)
+    @Column(name = "\"Id\"", nullable = false)
     private UUID id;
 
-    @Column(name = "FechaCiclo", nullable = false, unique = true)
+    @Column(name = "\"FechaCiclo\"", nullable = false, unique = true)
     private LocalDate fechaCiclo;
 
-    @Column(name = "HoraCorte", nullable = false)
+    @Column(name = "\"HoraCorte\"", nullable = false)
     private LocalDateTime horaCorte;
 
-    @Column(name = "TotalTransacciones", nullable = false)
+    @Column(name = "\"TotalTransacciones\"", nullable = false)
     private Integer totalTransacciones;
 
-    @Column(name = "PosicionesNetas", nullable = false, columnDefinition = "jsonb")
+    @Column(name = "\"PosicionesNetas\"", nullable = false, columnDefinition = "jsonb")
     private String posicionesNetas;
 
-    @Column(name = "Estado", nullable = false, length = 20)
+    @Column(name = "\"Estado\"", nullable = false, length = 20)
     private String estado;
 
-    @Column(name = "ArchivoLiquidacionUrl", length = 500)
+    @Column(name = "\"ArchivoLiquidacionUrl\"", length = 500)
     private String archivoLiquidacionUrl;
+
+    @Lob
+    @Column(name = "\"ArchivoXmlContenido\"", columnDefinition = "TEXT")
+    private String archivoXmlContenido;
+
+    @Lob
+    @Column(name = "\"ArchivoCsvContenido\"", columnDefinition = "TEXT")
+    private String archivoCsvContenido;
 
     public CiclosCompensacion() {
     }
@@ -50,8 +59,10 @@ public class CiclosCompensacion {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CiclosCompensacion other)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof CiclosCompensacion other))
+            return false;
         return id != null && id.equals(other.id);
     }
 
@@ -67,7 +78,6 @@ public class CiclosCompensacion {
                 ", fechaCiclo=" + fechaCiclo +
                 ", horaCorte=" + horaCorte +
                 ", totalTransacciones=" + totalTransacciones +
-                ", posicionesNetas='" + posicionesNetas + '\'' +
                 ", estado='" + estado + '\'' +
                 ", archivoLiquidacionUrl='" + archivoLiquidacionUrl + '\'' +
                 '}';

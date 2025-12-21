@@ -8,11 +8,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Repository
-public interface IdempotenciaRepository extends JpaRepository<IdempotenciaCache, String> {
+public interface IdempotenciaRepository extends JpaRepository<IdempotenciaCache, UUID> {
 
     @Modifying
-    @Query("DELETE FROM IdempotenciaCache i WHERE i.fechaRegistro < :limite")
-    int deleteByFechaRegistroBefore(@Param("limite") LocalDateTime limite);
+    @Query("DELETE FROM IdempotenciaCache i WHERE i.fechaCreacion < :limite")
+    int deleteByFechaCreacionBefore(@Param("limite") LocalDateTime limite);
 }
